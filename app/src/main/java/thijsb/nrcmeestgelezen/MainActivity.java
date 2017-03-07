@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         WebView w = (WebView) this.findViewById(R.id.webview);
         w.loadUrl("https://www.nrc.nl" + getArticlePath(i));
         currentArticle = i;
-        setTitle("(" + (i + 1) + ") " + getArticleTitle(i));
+        setTitle("[" + (i + 1) + "] " + getArticleTitle(i));
     }
     public void loadArticleByTitle(String title) { //iterate through pages and get one with title
         try {

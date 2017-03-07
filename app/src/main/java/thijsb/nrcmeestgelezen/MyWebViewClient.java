@@ -10,7 +10,7 @@ public class MyWebViewClient extends WebViewClient {
     @Override
     public void onPageFinished(WebView w, String url) { //hide header and more from NRC
         if (url.startsWith("https://www.nrc.nl/nieuws") || url.startsWith("https://nrc.nl/nieuws")) {
-            w.loadUrl(toCSS("header, .share, .feedback-button, footer, .banner, .tabbed-articles__section--type-popular-trending { display:none; }"));
+            w.loadUrl(toCSS("header.header, .share, .feedback-button, footer, .banner, .newslettersignup, .tabbed-articles__section--type-popular-trending { display:none; }"));
         }
     }
     private String toCSS(String style) {
