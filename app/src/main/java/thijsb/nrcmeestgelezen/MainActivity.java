@@ -6,8 +6,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.ShareActionProvider;
 import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,17 +17,22 @@ import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ShareActionProvider mShareActionProvider;
     private JSONObject jsonObject;
     private Integer currentArticle = 0;
+    private String hideMenuItem = "";
+    private String toShare = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +57,16 @@ public class MainActivity extends AppCompatActivity {
                 //retrieve data
                 jsonObject = new retrieveData().execute("https://www.nrc.nl/local-bigboard-data").get();
 
-                //load article
+                //load article (chosen or first) in webview
                 Bundle extras = getIntent().getExtras();
-                if (extras != null) {
+                if (extras != null && extras.containsKey("articleTitle")) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(true); // visible back button
+                    hideMenuItem = "listview";  // invisible listview button
+
                     loadArticleByTitle(extras.getString("articleTitle"));
                 } else {
                     loadArticle(0);
+                    Toast.makeText(MainActivity.this, "Veeg naar links en rechts om te bladeren", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -67,26 +78,32 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadArticle(Integer i) {
+    public void loadArticle(Integer i) { //load article in webview based on json index number
+        String title = getArticleTitle(i);
+        String url = "https://www.nrc.nl" + getArticlePath(i);
         WebView w = (WebView) this.findViewById(R.id.webview);
-        w.loadUrl("https://www.nrc.nl" + getArticlePath(i));
+        w.loadUrl(url);
+        setTitle("[" + (i + 1) + "] " + title);
         currentArticle = i;
-        setTitle("[" + (i + 1) + "] " + getArticleTitle(i));
+        toShare = title + " - " + url;
     }
-    public void loadArticleByTitle(String title) { //iterate through pages and get one with title
+    public void loadArticleByTitle(String title) { //iterate through json and get one with title
         try {
             JSONArray jsonArray = jsonObject.getJSONArray("pages");
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject row = jsonArray.getJSONObject(i);
                 if (title.equals(Html.fromHtml(row.getString("title")).toString())) {
                     loadArticle(i);
+                } else {
+                    //Toast.makeText(MainActivity.this, "Dit artikel is al uit NRC meest gelezen verdwenen. Voor verversen: zie bovenaan.", Toast.LENGTH_SHORT).show();
+                    //finish();
                 }
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-    public String getArticlePath(Integer i) { //gets path
+    public String getArticlePath(Integer i) { //gets path from integer in json list
         try {
             JSONArray jsonArray = jsonObject.getJSONArray("pages");
             JSONObject article = jsonArray.getJSONObject(i);
@@ -139,8 +156,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+
+        //listview option
+        if(hideMenuItem.equals("listview")) {
+            MenuItem listview = menu.findItem(R.id.listview);
+            listview.setVisible(false);
+        }
+
+        /*
+        //share button
+        MenuItem shareItem = menu.findItem(R.id.share);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(shareItem);
+*/
+
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
@@ -148,6 +179,18 @@ public class MainActivity extends AppCompatActivity {
             Intent myIntent = new Intent(MainActivity.this, ListActivity.class);
             startActivity(myIntent);
             finish();
+            return true;
+        }
+        if (id == android.R.id.home) {
+            finish();
+            return true;
+        }
+        if (id == R.id.share) {
+            Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, toShare);
+            startActivity(Intent.createChooser(sharingIntent, "Deel artikel..."));
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

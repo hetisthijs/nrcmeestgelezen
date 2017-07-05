@@ -16,6 +16,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,12 +30,17 @@ import thijsb.nrcmeestgelezen.imageutils.ImageLoader;
 
 public class ListActivity extends AppCompatActivity {
 
+    private ListView list;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list);
         setTitle("Meest gelezen");
+        CreateList();
+    }
 
+    public void CreateList() {
         final List<String> text = new ArrayList<>();
         List<String> images = new ArrayList<>();
         try {
@@ -61,7 +67,7 @@ public class ListActivity extends AppCompatActivity {
         }
 
         // load list
-        ListView list = (ListView)findViewById(R.id.listView1);
+        list = (ListView)findViewById(R.id.listView1);
         LazyAdapter adapter = new LazyAdapter(this, images, text);
         list.setAdapter(adapter);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -72,7 +78,6 @@ public class ListActivity extends AppCompatActivity {
                 startActivity(myIntent);
             }
         });
-
     }
 
     public class LazyAdapter extends BaseAdapter {
@@ -122,6 +127,14 @@ public class ListActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
+        if (id == R.id.refresh) {
+            int index = list.getFirstVisiblePosition();
+            View v = list.getChildAt(0);
+            int top = (v == null) ? 0 : (v.getTop() - list.getPaddingTop());
+            CreateList();
+            list.setSelectionFromTop(index, top);
+            Toast.makeText(ListActivity.this, "Ververst", Toast.LENGTH_SHORT).show();
+        }
         if (id == R.id.mainview) {
             Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
             startActivity(myIntent);
