@@ -4,13 +4,16 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.CookieManager;
@@ -24,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        removeOldRead();
 
         // set webview client and settings
         WebView myWebView = (WebView) this.findViewById(R.id.webview);
@@ -83,10 +88,12 @@ public class MainActivity extends AppCompatActivity {
         String url = "https://www.nrc.nl" + getArticlePath(i);
         WebView w = (WebView) this.findViewById(R.id.webview);
         w.loadUrl(url);
+        setRead(title, url);
         setTitle("[" + (i + 1) + "] " + title);
         currentArticle = i;
         toShare = title + " - " + url;
     }
+
     public void loadArticleByTitle(String title) { //iterate through json and get one with title
         try {
             JSONArray jsonArray = jsonObject.getJSONArray("pages");
@@ -122,6 +129,31 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return "/";
+    }
+
+    // add sharedpreference pair with title|timestamp
+    private void setRead(String title, String url) {
+        Long tsLong = System.currentTimeMillis()/1000;
+        String timestamp = tsLong.toString();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);;
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(title, timestamp);
+        editor.apply();
+    }
+
+    // remove sharedpreference with timestamp older than 7 days
+    private void removeOldRead() {
+        Long tsLong = (System.currentTimeMillis()/1000)-604800000L;
+        String timestamp_7days = tsLong.toString();
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);;
+        Map<String, ?> allEntries = sharedPref.getAll();
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            if (Integer.parseInt(entry.getValue().toString()) < Integer.parseInt(timestamp_7days)) {
+                sharedPref.edit().remove(entry.getKey()).apply();
+            }
+        }
     }
 
     public class JavaScriptInterface {

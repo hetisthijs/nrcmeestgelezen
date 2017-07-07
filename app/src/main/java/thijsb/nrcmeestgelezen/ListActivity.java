@@ -3,9 +3,13 @@ package thijsb.nrcmeestgelezen;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,11 +35,14 @@ import thijsb.nrcmeestgelezen.imageutils.ImageLoader;
 public class ListActivity extends AppCompatActivity {
 
     private ListView list;
+    private SharedPreferences sharedPref;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list);
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         setTitle("Meest gelezen");
         CreateList();
     }
@@ -73,6 +80,9 @@ public class ListActivity extends AppCompatActivity {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                TextView textView = (TextView)view.findViewById(R.id.text);
+                textView.setTextColor(Color.GRAY);
+
                 Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
                 myIntent.putExtra("articleTitle", text.get(position));
                 startActivity(myIntent);
@@ -114,6 +124,13 @@ public class ListActivity extends AppCompatActivity {
             TextView textv = (TextView)vi.findViewById(R.id.text);;
             ImageView imagev = (ImageView)vi.findViewById(R.id.image);
             textv.setText(text.get(position));
+
+            if (sharedPref.contains(text.get(position))) { //if title exist, item has already been read
+                textv.setTextColor(Color.GRAY);
+            } else {
+                textv.setTextColor(Color.BLACK);
+            }
+
             imageLoader.DisplayImage(images.get(position), imagev);
             return vi;
         }
