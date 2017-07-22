@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:textSize="14dip"
             android:textStyle="bold"
-            android:textColor="@color/listColor"/>
+            android:textColor="@color/notRead"/>
 
     </TableRow>
 </TableLayout>

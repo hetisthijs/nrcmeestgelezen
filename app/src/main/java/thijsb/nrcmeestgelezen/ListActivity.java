@@ -81,7 +81,7 @@ public class ListActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TextView textView = (TextView)view.findViewById(R.id.text);
-                textView.setTextColor(Color.GRAY);
+                textView.setTextColor(getResources().getColor(R.color.read));
 
                 Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
                 myIntent.putExtra("articleTitle", text.get(position));
@@ -126,9 +126,9 @@ public class ListActivity extends AppCompatActivity {
             textv.setText(text.get(position));
 
             if (sharedPref.contains(text.get(position))) { //if title exist, item has already been read
-                textv.setTextColor(Color.GRAY);
+                textv.setTextColor(getResources().getColor(R.color.read));
             } else {
-                textv.setTextColor(Color.BLACK);
+                textv.setTextColor(getResources().getColor(R.color.notRead));
             }
 
             imageLoader.DisplayImage(images.get(position), imagev);

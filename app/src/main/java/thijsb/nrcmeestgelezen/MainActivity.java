@@ -52,8 +52,8 @@ public class MainActivity extends AppCompatActivity {
         myWebView.addJavascriptInterface(new JavaScriptInterface(this), "Android");
 
         // dont store cookies
-        ws.setSaveFormData(false);
-        CookieManager.getInstance().setAcceptCookie(false);
+        //ws.setSaveFormData(false);
+        //CookieManager.getInstance().setAcceptCookie(false);
 
         try {
             //check if wifi/3g active
