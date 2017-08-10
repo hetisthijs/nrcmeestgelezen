@@ -1,12 +1,16 @@
 package thijsb.nrcmeestgelezen;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.util.Log;
@@ -36,7 +40,7 @@ public class ListActivity extends AppCompatActivity {
 
     private ListView list;
     private SharedPreferences sharedPref;
-
+    private static final int REQUEST_WRITE_STORAGE = 112;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +48,15 @@ public class ListActivity extends AppCompatActivity {
         setContentView(R.layout.list);
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         setTitle("Meest gelezen");
+        RequestWriteStorage();
         CreateList();
+    }
+
+    public void RequestWriteStorage() {
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_WRITE_STORAGE);
+        }
     }
 
     public void CreateList() {
@@ -145,12 +157,7 @@ public class ListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.refresh) {
-            int index = list.getFirstVisiblePosition();
-            View v = list.getChildAt(0);
-            int top = (v == null) ? 0 : (v.getTop() - list.getPaddingTop());
-            CreateList();
-            list.setSelectionFromTop(index, top);
-            Toast.makeText(ListActivity.this, "Ververst", Toast.LENGTH_SHORT).show();
+            refreshButton();
         }
         if (id == R.id.mainview) {
             Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
@@ -158,5 +165,30 @@ public class ListActivity extends AppCompatActivity {
             finish();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void refreshButton() {
+        int index = list.getFirstVisiblePosition();
+        View v = list.getChildAt(0);
+        int top = (v == null) ? 0 : (v.getTop() - list.getPaddingTop());
+        CreateList();
+        list.setSelectionFromTop(index, top);
+        Toast.makeText(ListActivity.this, "Ververst", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode)
+        {
+            case REQUEST_WRITE_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    refreshButton();
+                } else {
+                    Toast.makeText(ListActivity.this, "App heeft geen toegang om naar externe opslag te schrijven. Daardoor kan het de afbeeldingen niet weergeven. Overweeg alsnog permissie te verlenen aub.", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+
     }
 }
