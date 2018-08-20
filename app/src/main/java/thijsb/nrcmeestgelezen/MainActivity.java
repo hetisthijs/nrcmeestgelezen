@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         Long tsLong = System.currentTimeMillis()/1000;
         String timestamp = tsLong.toString();
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);;
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(title, timestamp);
         editor.apply();
@@ -147,11 +147,13 @@ public class MainActivity extends AppCompatActivity {
         Long tsLong = (System.currentTimeMillis()/1000)-604800000L;
         String timestamp_7days = tsLong.toString();
 
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);;
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         Map<String, ?> allEntries = sharedPref.getAll();
         for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-            if (Integer.parseInt(entry.getValue().toString()) < Integer.parseInt(timestamp_7days)) {
-                sharedPref.edit().remove(entry.getKey()).apply();
+            if(entry.getValue().toString().matches("\\d+(?:\\.\\d+)?")) { //if number
+                if (Integer.parseInt(entry.getValue().toString()) < Integer.parseInt(timestamp_7days)) {
+                    sharedPref.edit().remove(entry.getKey()).apply();
+                }
             }
         }
     }
