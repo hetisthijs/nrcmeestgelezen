@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -53,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
 
         // dont store cookies
         //ws.setSaveFormData(false);
-        //CookieManager.getInstance().setAcceptCookie(false);
+        //CookieManager.getInstance().removeAllCookie();
+        //CookieSyncManager.getInstance().sync();
+        //CookieManager.getInstance().setCookie(".nrc.nl", "nmt_closed_cookiebar=1");
 
         try {
             //check if wifi/3g active
