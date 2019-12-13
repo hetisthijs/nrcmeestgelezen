@@ -31,6 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -40,6 +41,7 @@ public class ListActivity extends AppCompatActivity {
 
     private ListView list;
     private SharedPreferences sharedPref;
+    private String[] ignoreContaining = {"Sudoku", "In het midden", "NRC Handelsblad van", "Colofon"}; //ignore titles that contain one of these strings
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     @Override
@@ -61,7 +63,8 @@ public class ListActivity extends AppCompatActivity {
 
     public void CreateList() {
         final List<String> text = new ArrayList<>();
-        List<String> images = new ArrayList<>();
+        final List<String> images = new ArrayList<>();
+        final List<String> paths = new ArrayList<>();
         try {
             //get all images and titles
             JSONObject jsonObject = new retrieveData().execute("https://www.nrc.nl/local-bigboard-data").get();
@@ -69,12 +72,14 @@ public class ListActivity extends AppCompatActivity {
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject row = jsonArray.getJSONObject(i);
                 String title = Html.fromHtml(row.getString("title")).toString();
+                String path = row.getString("path");
                 String imageUrl = "";
                 if (row.has("image")) {
                     imageUrl = row.getJSONObject("image").getJSONObject("versions").getString("xsmall");
                 }
-                if (title.equals("")) continue;
+                if (stringContainsItemFromList(title, ignoreContaining) || title.equals("")) continue;
                 text.add(title);
+                paths.add(path);
                 images.add(imageUrl);
             }
         } catch (InterruptedException e) {
@@ -96,6 +101,8 @@ public class ListActivity extends AppCompatActivity {
                 textView.setTextColor(getResources().getColor(R.color.read));
 
                 Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
+                myIntent.putExtra("articlePosition", position);
+                myIntent.putExtra("articlePath", paths.get(position));
                 myIntent.putExtra("articleTitle", text.get(position));
                 startActivity(myIntent);
             }
@@ -133,7 +140,7 @@ public class ListActivity extends AppCompatActivity {
                 vi = inflater.inflate(R.layout.list_single, null);
 
             // set text and image
-            TextView textv = (TextView)vi.findViewById(R.id.text);;
+            TextView textv = (TextView)vi.findViewById(R.id.text);
             ImageView imagev = (ImageView)vi.findViewById(R.id.image);
             textv.setText(text.get(position));
 
@@ -190,5 +197,14 @@ public class ListActivity extends AppCompatActivity {
             }
         }
 
+    }
+
+    public static boolean stringContainsItemFromList(String inputStr, String[] items) {
+        for(int i =0; i < items.length; i++) {
+            if(inputStr.contains(items[i])) {
+                return true;
+            }
+        }
+        return false;
     }
 }

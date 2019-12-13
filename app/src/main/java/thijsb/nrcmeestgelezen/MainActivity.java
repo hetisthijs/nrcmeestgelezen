@@ -67,13 +67,13 @@ public class MainActivity extends AppCompatActivity {
 
                 //load article (chosen or first) in webview
                 Bundle extras = getIntent().getExtras();
-                if (extras != null && extras.containsKey("articleTitle")) {
+                if (extras != null && extras.containsKey("articleTitle") && extras.containsKey("articlePath") && extras.containsKey("articlePosition")) {
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true); // visible back button
                     hideMenuItem = "listview";  // invisible listview button
 
-                    loadArticleByTitle(extras.getString("articleTitle"));
+                    loadArticle(extras.getString("articleTitle"), extras.getString("articlePath"), extras.getInt("articlePosition"));
                 } else {
-                    loadArticle(0);
+                    loadArticleByPosition(0);
                     Toast.makeText(MainActivity.this, "Veeg naar links en rechts om te bladeren", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -86,52 +86,26 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadArticle(Integer i) { //load article in webview based on json index number
-        String title = getArticleTitle(i);
-        String url = "https://www.nrc.nl" + getArticlePath(i);
+    public void loadArticle(String title, String path, Integer position) { //load article in webview based on json index number
+        String url = "https://www.nrc.nl" + path;
         WebView w = (WebView) this.findViewById(R.id.webview);
         w.loadUrl(url);
         setRead(title, url);
-        setTitle("[" + (i + 1) + "] " + title);
-        currentArticle = i;
+        setTitle("[" + (position + 1) + "] " + title);
+        currentArticle = position;
         toShare = title + " - " + url;
     }
 
-    public void loadArticleByTitle(String title) { //iterate through json and get one with title
+    public void loadArticleByPosition(Integer position) {
         try {
             JSONArray jsonArray = jsonObject.getJSONArray("pages");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject row = jsonArray.getJSONObject(i);
-                if (title.equals(Html.fromHtml(row.getString("title")).toString())) {
-                    loadArticle(i);
-                } else {
-                    //Toast.makeText(MainActivity.this, "Dit artikel is al uit NRC meest gelezen verdwenen. Voor verversen: zie bovenaan.", Toast.LENGTH_SHORT).show();
-                    //finish();
-                }
-            }
+            JSONObject row = jsonArray.getJSONObject(position);
+            String title = Html.fromHtml(row.getString("title")).toString();
+            String path = row.getString("path");
+            loadArticle(title, path, position);
         } catch (JSONException e) {
-            e.printStackTrace();
+            buildDialog(this).show();
         }
-    }
-    public String getArticlePath(Integer i) { //gets path from integer in json list
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("pages");
-            JSONObject article = jsonArray.getJSONObject(i);
-            return article.getString("path");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return "/";
-    }
-    public String getArticleTitle(Integer i) {
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("pages");
-            JSONObject article = jsonArray.getJSONObject(i);
-            return (Html.fromHtml(article.getString("title"))).toString();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return "/";
     }
 
     // add sharedpreference pair with title|timestamp
@@ -172,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    loadArticle(currentArticle + 1);
+                    loadArticleByPosition(currentArticle + 1);
                 }
             });
         }
@@ -184,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    loadArticle(currentArticle - 1);
+                    loadArticleByPosition(currentArticle - 1);
                 }
             });
         }
