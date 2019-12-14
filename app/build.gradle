@@ -7,9 +7,9 @@ android {
     defaultConfig {
         applicationId "thijsb.nrcmeestgelezen"
         minSdkVersion 14
-        targetSdkVersion 23
-        versionCode 8
-        versionName "1.6"
+        targetSdkVersion 28
+        versionCode 10
+        versionName "1.8"
     }
     buildTypes {
         release {

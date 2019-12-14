@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutionException;
 public class MainActivity extends AppCompatActivity {
 
     private ShareActionProvider mShareActionProvider;
-    private JSONObject jsonObject;
+    private List<Article> articles;
     private Integer currentArticle = 0;
     private String hideMenuItem = "";
     private String toShare = "";
@@ -63,15 +63,16 @@ public class MainActivity extends AppCompatActivity {
             if(!isConnected(this)) buildDialog(this).show();
             else {
                 //retrieve data
-                jsonObject = new retrieveData().execute("https://www.nrc.nl/local-bigboard-data").get();
+                articles = new retrieveData().execute().get();
 
                 //load article (chosen or first) in webview
                 Bundle extras = getIntent().getExtras();
-                if (extras != null && extras.containsKey("articleTitle") && extras.containsKey("articlePath") && extras.containsKey("articlePosition")) {
+                if (extras != null && extras.containsKey("articlePosition")) {
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true); // visible back button
                     hideMenuItem = "listview";  // invisible listview button
 
-                    loadArticle(extras.getString("articleTitle"), extras.getString("articlePath"), extras.getInt("articlePosition"));
+                    Integer position = extras.getInt("articlePosition");
+                    loadArticleByPosition(position);
                 } else {
                     loadArticleByPosition(0);
                     Toast.makeText(MainActivity.this, "Veeg naar links en rechts om te bladeren", Toast.LENGTH_SHORT).show();
@@ -86,8 +87,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void loadArticle(String title, String path, Integer position) { //load article in webview based on json index number
-        String url = "https://www.nrc.nl" + path;
+    public void loadArticle(Article article) { //load article in webview
+        String url = "https://www.nrc.nl" + article.getPath();
+        String title = article.getTitle();
+        Integer position = article.getPosition();
         WebView w = (WebView) this.findViewById(R.id.webview);
         w.loadUrl(url);
         setRead(title, url);
@@ -97,15 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadArticleByPosition(Integer position) {
-        try {
-            JSONArray jsonArray = jsonObject.getJSONArray("pages");
-            JSONObject row = jsonArray.getJSONObject(position);
-            String title = Html.fromHtml(row.getString("title")).toString();
-            String path = row.getString("path");
-            loadArticle(title, path, position);
-        } catch (JSONException e) {
-            buildDialog(this).show();
-        }
+        loadArticle(articles.get(position));
     }
 
     // add sharedpreference pair with title|timestamp

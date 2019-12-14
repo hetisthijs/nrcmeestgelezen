@@ -41,7 +41,6 @@ public class ListActivity extends AppCompatActivity {
 
     private ListView list;
     private SharedPreferences sharedPref;
-    private String[] ignoreContaining = {"Sudoku", "In het midden", "NRC Handelsblad van", "Colofon"}; //ignore titles that contain one of these strings
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     @Override
@@ -62,69 +61,46 @@ public class ListActivity extends AppCompatActivity {
     }
 
     public void CreateList() {
-        final List<String> text = new ArrayList<>();
-        final List<String> images = new ArrayList<>();
-        final List<String> paths = new ArrayList<>();
         try {
-            //get all images and titles
-            JSONObject jsonObject = new retrieveData().execute("https://www.nrc.nl/local-bigboard-data").get();
-            JSONArray jsonArray = jsonObject.getJSONArray("pages");
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject row = jsonArray.getJSONObject(i);
-                String title = Html.fromHtml(row.getString("title")).toString();
-                String path = row.getString("path");
-                String imageUrl = "";
-                if (row.has("image")) {
-                    imageUrl = row.getJSONObject("image").getJSONObject("versions").getString("xsmall");
+            final List<Article> articles = new retrieveData().execute().get();
+
+            // load list
+            list = (ListView)findViewById(R.id.listView1);
+            LazyAdapter adapter = new LazyAdapter(this, articles);
+            list.setAdapter(adapter);
+            list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    TextView textView = (TextView)view.findViewById(R.id.text);
+                    textView.setTextColor(getResources().getColor(R.color.read));
+
+                    Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
+                    myIntent.putExtra("articlePosition", position);
+                    startActivity(myIntent);
                 }
-                if (stringContainsItemFromList(title, ignoreContaining) || title.equals("")) continue;
-                text.add(title);
-                paths.add(path);
-                images.add(imageUrl);
-            }
+            });
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
-
-        // load list
-        list = (ListView)findViewById(R.id.listView1);
-        LazyAdapter adapter = new LazyAdapter(this, images, text);
-        list.setAdapter(adapter);
-        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView textView = (TextView)view.findViewById(R.id.text);
-                textView.setTextColor(getResources().getColor(R.color.read));
-
-                Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
-                myIntent.putExtra("articlePosition", position);
-                myIntent.putExtra("articlePath", paths.get(position));
-                myIntent.putExtra("articleTitle", text.get(position));
-                startActivity(myIntent);
-            }
-        });
     }
 
     public class LazyAdapter extends BaseAdapter {
         private Activity activity;
-        private List<String> images;
-        private List<String> text;
+        private List<Article> articles;
         private LayoutInflater inflater = null;
         public ImageLoader imageLoader;
 
-        public LazyAdapter(Activity a, List<String> images, List<String> text) {
+        public LazyAdapter(Activity a, List<Article> articles) {
             this.activity = a;
-            this.images = images;
-            this.text = text;
+            this.articles = articles;
             this.inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             this.imageLoader = new ImageLoader(activity.getApplicationContext());
         }
 
-        public int getCount() { return text.size()-1; }
+        public int getCount() { return articles.size()-1; }
 
         public Object getItem(int position) {
             return position;
@@ -139,18 +115,20 @@ public class ListActivity extends AppCompatActivity {
             if(convertView == null)
                 vi = inflater.inflate(R.layout.list_single, null);
 
-            // set text and image
+            Article article = articles.get(position);
+            String title = article.getTitle();
+            String image = article.getImage();
+
             TextView textv = (TextView)vi.findViewById(R.id.text);
             ImageView imagev = (ImageView)vi.findViewById(R.id.image);
-            textv.setText(text.get(position));
+            textv.setText(title);
+            imageLoader.DisplayImage(image, imagev);
 
-            if (sharedPref.contains(text.get(position))) { //if title exist, item has already been read
+            if (sharedPref.contains(title)) { //if title exist, item has already been read
                 textv.setTextColor(getResources().getColor(R.color.read));
             } else {
                 textv.setTextColor(getResources().getColor(R.color.notRead));
             }
-
-            imageLoader.DisplayImage(images.get(position), imagev);
             return vi;
         }
     }
@@ -197,14 +175,5 @@ public class ListActivity extends AppCompatActivity {
             }
         }
 
-    }
-
-    public static boolean stringContainsItemFromList(String inputStr, String[] items) {
-        for(int i =0; i < items.length; i++) {
-            if(inputStr.contains(items[i])) {
-                return true;
-            }
-        }
-        return false;
     }
 }
