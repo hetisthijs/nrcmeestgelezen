@@ -67,12 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
                 //load article (chosen or first) in webview
                 Bundle extras = getIntent().getExtras();
-                if (extras != null && extras.containsKey("articlePosition")) {
+                if (extras != null && extras.containsKey("article")) {
                     getSupportActionBar().setDisplayHomeAsUpEnabled(true); // visible back button
                     hideMenuItem = "listview";  // invisible listview button
 
-                    Integer position = extras.getInt("articlePosition");
-                    loadArticleByPosition(position);
+                    Article article = (Article) extras.getSerializable("article");
+                    loadArticle(article);
                 } else {
                     loadArticleByPosition(0);
                     Toast.makeText(MainActivity.this, "Veeg naar links en rechts om te bladeren", Toast.LENGTH_SHORT).show();

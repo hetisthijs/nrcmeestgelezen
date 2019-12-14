@@ -75,7 +75,7 @@ public class ListActivity extends AppCompatActivity {
                     textView.setTextColor(getResources().getColor(R.color.read));
 
                     Intent myIntent = new Intent(ListActivity.this, MainActivity.class);
-                    myIntent.putExtra("articlePosition", position);
+                    myIntent.putExtra("article", articles.get(position));
                     startActivity(myIntent);
                 }
             });
