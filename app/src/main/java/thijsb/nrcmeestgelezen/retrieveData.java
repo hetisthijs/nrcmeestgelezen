@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class retrieveData extends AsyncTask<Void, Void, List> {
-    String[] ignoreContaining = {"Sudoku", "In het midden", "NRC Handelsblad van", "Colofon"}; //ignore titles that contain one of these strings
+    String[] ignoreContaining = {"Sudoku", "In het midden", "NRC Handelsblad van", "Colofon", "Scrypt"}; //ignore titles that contain one of these strings
     String bigboard = "https://www.nrc.nl/local-bigboard-data";
 
     @Override

@@ -8,7 +8,7 @@ android {
         applicationId "thijsb.nrcmeestgelezen"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 10
+        versionCode 11
         versionName "1.8"
     }
     buildTypes {
